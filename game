@@ -1,0 +1,379 @@
+# CS-UY 1114
+# Final project
+
+import turtle
+import time
+import random
+import math
+
+# This variable represents the x position
+# of the player's paddle. Initially, it
+# will be 0 (i.e. in the center). The y
+# position of the paddles never changes,
+# so we don't need a variable for it.
+user1x = 0
+
+# This variable represents the x position
+# of the computer's paddle. Initially, it
+# will be 0 (i.e. in the center)
+user2x = 0
+
+# These variables store the current x and y
+# position of the ball. Their values will be
+# updates on each frame, as the ball moves.
+ballx = 0
+bally = 0
+
+# These variables store the current x and y
+# velocity of the ball. Their values will be
+# updates on each frame, as the ball moves.
+ballvx = 0
+ballvy = 0
+
+# These variables store the current score 
+# of the game.
+user1points = 0
+user2points = 0
+
+paddle_l = 140
+paddle_w = 10
+turtle.setup(1000,1000)
+turtle.screensize(1000,1000)
+
+last_ai_move = time.time()
+
+def draw_frame():
+    """
+    signature: () -> NoneType
+    Given the current state of the game in
+    the global variables, draw all visual
+    elements on the screen: the paddles,
+    the ball, and the current score.
+    Please note that this is your only function
+    where drawing should happen (i.e. the only
+    function where you call functions in the
+    turtle module). Other functions in this
+    program merely update the state of global
+    variables.
+    This function also should not modify any
+    global variables.
+    Hint: write this function first!
+    """
+    global paddle_l 
+    global paddle_w
+    global paddle_range 
+    
+    turtle.begin_fill()
+    turtle.color("Red")
+    
+    
+#This is used for drawing the computer paddle as well as filling it
+    turtle.penup()
+    turtle.goto(user2x,370) 
+    turtle.pendown()
+    for i in range (2):
+        turtle.forward(paddle_l)
+        turtle.right(90)
+        turtle.forward(paddle_w)
+        turtle.right(90)
+    turtle.end_fill()
+        
+#This is used for drawing the player paddle as well as filling it
+    turtle.begin_fill()
+    turtle.color("Red")
+    turtle.penup()
+    turtle.goto(user1x, -350)
+    turtle.pendown()
+    for i in range (2):
+        turtle.forward(paddle_l)
+        turtle.right(90)
+        turtle.forward(paddle_w)
+        turtle.right(90)
+    turtle.end_fill()
+    
+#This draws the circle   
+    turtle.begin_fill()
+    turtle.color("Red")
+    turtle.penup()
+    turtle.setposition(ballx,bally)
+    turtle.pendown()
+    turtle.circle(8)
+    turtle.end_fill()
+    
+#This is where turtle writes the titles and score
+    turtle.up()
+    turtle.goto(-turtle.window_width()/2 +40, turtle.window_height()/2 - 80)
+    turtle.down()
+    turtle.color("Red")
+    name = "Pong"
+    points_1 = "Your Points " + str(user1points)
+    points_2 = "Computer Points " + str(user2points)
+    full_title = "\n".join([name,points_1,points_2])
+    
+    turtle.write(full_title, font= ("Arial", 20,"normal"))
+
+    
+   
+
+
+def key_left():
+    """
+    signature: () -> NoneType
+    This function is called by turtle whenever
+    the user press the left arrow. It should
+    adjust the position of the user's paddle
+    appropriately by modifying the variable
+    user1x.
+    """
+    global paddle_length
+    global paddle_width
+    global user1x
+    turtle.penup()
+    
+#Allows the player to move left but not off the window
+    if user1x > (-turtle.window_width() / 2)  :
+        user1x -= 30
+
+def key_right():
+    """
+    signature: () -> NoneType
+    This function is called by turtle whenever
+    the user press the left arrow. It should
+    adjust the position of the user's paddle
+    appropriately by modifying the variable
+    user1x.
+    """
+    global user1x
+    global paddle_length
+    global paddle_width
+    
+#Allows the player to move right but not off the window 
+    if user1x < ((turtle.window_width() / 2) - 190):
+        user1x += 30
+
+
+def reset():
+    """
+    signature: () -> NoneType
+    Reset the global variables representing
+    the position and velocity of the ball and
+    the position of the paddlesto their initial
+    state, effectively restarting the game. The
+    initial velocity of the ball should be random
+    (but there there must be nonzero vertical
+    velocity), but the speed of the ball should
+    be the same in every game.
+    """
+    global user1x, user2x
+    global ballvx, ballvy
+    global ballx, bally
+    global user1points, user2points
+
+    user1points = 0
+    user2points = 0
+    
+    ballx = 0
+    bally = 0
+
+    user1x = 0
+    user2x = 0
+
+
+    while ballvx == 0 or ballvy == 0:
+        ballvy = random.randint(-7,7)
+        ballvx = math.sqrt(49-(ballvy**2))        
+
+        
+def ai():
+    """
+      signature: () -> NoneType
+    Perform the 'artificial intelligence' of
+    the game, by moving the computer's paddle
+    to an appropriate location by updating
+    the user2x variable. The computer
+    paddle should move towards the ball in an
+    attempt to get under it.
+    """
+    global user2x
+    global ballx
+    global bally
+    global last_ai_move
+#This slows down the ai so that is can only move once every 0.09 seconds
+    curr_time = time.time()
+    if curr_time - last_ai_move < 0.09:
+        return
+    last_ai_move = curr_time
+    
+#This is what determines when the ai moves depending on where the ball is on the screen
+    if bally > 0:
+        #go right
+        if user2x + 140 < ballx: 
+            user2x += 30
+            
+        #go left
+        elif user2x > ballx: 
+            user2x -= 30
+            
+    
+def bounce_angle(paddle):
+    """
+    signature: () -> NoneType
+    This function handles determining the angle that is used
+    after the ball has made contact with the paddle. It should
+    find the distance between the collision and the center of the paddle
+    and then determine the angle the ball should bounce off of. This function
+    handles changing the ballvx and ballvy for every collision. 
+    """
+    global ballvx, ballvy
+    
+#These variables were used to find the angles that the ball bounces off of when making contact with the paddle
+    center = paddle + 70
+    distance = (abs(ballx - center))
+    angle = (distance * math.pi / 180)
+    print(angle)
+    
+    ballvx = math.sin(angle) * 7 
+    ballvy = math.cos(angle) * 7  
+    
+    if ballx < center:
+        ballvx = -1 * abs(ballvx)
+        
+    if paddle == user1x:
+        ballvy = abs(ballvy)
+    else:
+        ballvy = -1 * abs(ballvy)
+
+#This function was used to reset everthing after every point
+        
+def reset_every():
+    global ballvx, ballvy
+    """
+    signature: () -> NoneType
+    This function handles the movement of the ball after each point.
+    It effectively resets the ball velocity to zero and
+    then randomizes its direction for the next point. 
+    """
+    ballvx = 0
+    ballvy = 0
+
+    while ballvx == 0 or ballvy == 0:
+        ballvy = random.randint(-7,7)
+        ballvx = math.sqrt(49-(ballvy**2))
+    
+    
+    
+def physics():
+    """
+    signature: () -> NoneType
+    This function handles the physics of the game
+    by updating the position and velocity of the
+    ball depending on its current location. This
+    function should detect if the ball has collided
+    with a paddle or a wall, and if so, adjust the
+    direction of the ball (as stored in the ballvx
+    and ballvy variables) appropriately. If the ball
+    has not collided with anything, the position of the
+    ball should be updated according to its current
+    velocity.
+    This function should also detect if one of
+    the two players has missed the ball. If so, it
+    should award a point to the other player, and
+    then call the reset() function to start a new
+    round.
+    """
+    global ballx, bally
+    global ballvx, ballvy
+    global user1points, user2points
+    global user1x, user2x
+    
+    
+#This is for bouncing off of edge of the window
+    if ballx + 8 > (turtle.window_width()/2) - 32.9:
+        ballvx *= -1
+        
+    if ballx + 8 < (-turtle.window_width()/2) + 30 :
+        ballvx *= -1
+        
+#This determines when and how the ball bounces off of the computer paddle
+    if bally > 350 and abs(ballx - (user2x+70) ) < 70:
+        bounce_angle((user2x))
+        
+
+#This determines when and how the ball bounces of the user paddle
+    if bally < -350 and abs(ballx - (user1x+70) ) < 70:
+        bounce_angle((user1x))
+        
+
+#This is for the addition to player points
+    if bally > 370:
+        user1points += 1
+        user1x = 0
+        user2x = 0
+        ballx = 0
+        bally = 0
+        time.sleep(1)
+        reset_every()
+        
+        
+#This is for the addition to computer points      
+    if bally < -370:
+        user2points += 1
+        user1x = 0
+        user2x = 0
+        ballx = 0
+        bally = 0
+        time.sleep(1)
+        reset_every()
+        
+    ballx += ballvx
+    bally += ballvy
+    
+#This is for printing the winner but also reseting when the game ends
+    if user1points == 5:
+        turtle.up()
+        turtle.color("Red")
+        turtle.goto(0,0)
+        turtle.down()
+        turtle.write("Player Wins", font= ("Arial", 20,"normal"))
+        time.sleep(1)
+        reset()
+
+    if user2points == 5:
+        turtle.up()
+        turtle.color("Red")
+        turtle.goto(0,0)
+        turtle.down()
+        turtle.write("Computer Wins", font= ("Arial", 20,"normal"))
+        time.sleep(1)
+        reset()
+  
+        
+        
+        
+    
+    
+    
+
+def main():
+    """
+    signature: () -> NoneType
+    Run the pong game. You shouldn't need to
+    modify this function.
+    """
+    turtle.tracer(0,0)
+    turtle.hideturtle()
+    turtle.onkey(key_left, "Left")
+    turtle.onkey(key_right, "Right")
+    turtle.listen()
+    turtle.bgcolor("black")
+    reset()
+    while True:
+        physics()
+        ai()
+        turtle.clear()
+        draw_frame()
+        turtle.update()
+        time.sleep(0.01)
+
+
+main()
